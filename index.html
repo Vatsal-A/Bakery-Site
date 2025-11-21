@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bakeat: Cozy Bakery</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <style>
+        /* Custom Font Configuration for a 'Cozy' feel */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@100..900&display=swap');
+
+        :root {
+            --color-primary: #8B4513;  /* Earthy Brown */
+            --color-secondary: #F5E9D5; /* Creamy Beige */
+            --color-text: #333333;     /* Dark Text */
+            --color-accent: #DAA520;   /* Golden Accent */
+        }
+
+        /* Global smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Only hide system cursor on devices with a fine pointer (desktop) */
+        @media (hover:hover) and (pointer:fine) {
+            html {
+                cursor: none;
+            }
+        }
+
+        /* --- Custom Cursor Styles --- */
+        .custom-cursor {
+            pointer-events: none;
+            position: fixed;
+            z-index: 9999;
+            width: 12px;
+            height: 12px;
+            background-color: var(--color-primary);
+            border-radius: 50%;
+            transition:
+                transform 0.2s ease-out,
+                width 0.3s ease,
+                height 0.3s ease,
+                background-color 0.3s ease,
+                opacity 0.2s ease;
+            mix-blend-mode: difference;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; /* fade in once we move */
+        }
+
+        /* Hide fake cursor on touch devices */
+        @media (hover:none), (pointer:coarse) {
+            .custom-cursor {
+                display: none;
+            }
+        }
+
+        .cursor-grow {
+            width: 80px;
+            height: 80px;
+            background-color: transparent;
+            border: 2px solid white;
+            transform: translate(-50%, -50%) scale(1);
+            mix-blend-mode: normal;
+        }
+
+        .custom-cursor #cursor-content {
+            opacity: 0;
+            font-size: 2.5rem;
+            transition: opacity 0.3s ease-out;
+            line-height: 1;
+        }
+
+        .cursor-grow #cursor-content {
+            opacity: 1;
+        }
+        /* --- End Custom Cursor Styles --- */
+
+        /* Scroll-triggered fade / slide */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition:
+                opacity 0.9s ease-out,
+                transform 0.9s ease-out;
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---- Artisans Marquee ---- */
+        .artisans-marquee-shell {
+            overflow: hidden;
+            position: relative;
+            border-radius: 9999px; /* pill */
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .artisans-marquee-track {
+            display: inline-flex;
+            white-space: nowrap;
+            align-items: center;
+            padding: 0.65rem 1.5rem;
+            animation: artisans-marquee 26s linear infinite;
+            gap: 2.5rem;
+        }
+
+        .artisans-marquee-item {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        @keyframes artisans-marquee {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+
+        /* Hero Text Animation */
+        .hero-text {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition:
+                opacity 1.2s ease-out,
+                transform 1.2s ease-out;
+        }
+        .hero-text.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Parallax-ready elements */
+        [data-parallax] {
+            will-change: transform;
+            transition: transform 0.15s ease-out;
+        }
+
+        /* Fonts */
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+
+        /* --- Origin Transition Styles --- */
+        #origin-transition-wrapper {
+            height: 350vh;
+            position: relative;
+        }
+        #origin-sticky-content {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #fcf6ef;
+        }
+
+        .origin-image-gallery {
+            width: 80%;
+            max-width: 1200px;
+            height: 70vh;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            position: relative;
+            align-items: center;
+        }
+
+        .origin-image-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.1s linear;
+        }
+        .origin-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #origin-text-overlay {
+            position: absolute;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Make origin gallery more responsive */
+        @media (max-width: 1024px) {
+            .origin-image-gallery {
+                width: 95%;
+                height: 60vh;
+            }
+        }
+        @media (max-width: 768px) {
+            .origin-image-gallery {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                height: 55vh;
+            }
+            #img-1, #img-5 {
+                display: none;
+            }
+            #origin-text-overlay h2 {
+                font-size: 2.5rem;
+            }
+            #origin-text-overlay p {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .origin-image-gallery {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1rem;
+            }
+            #img-2, #img-4 {
+                display: none;
+            }
+        }
+
+        .img-placeholder {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        /* Detail page subtle entrance */
+        .page-detail-enter {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+        .page-detail-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.6s ease-out,
+                transform 0.6s ease-out;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': 'var(--color-primary)',
+                        'secondary': 'var(--color-secondary)',
+                        'text': 'var(--color-text)',
+                        'accent': 'var(--color-accent)',
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body bg-secondary text-text min-h-screen antialiased">
+    <!-- Custom Cursor (desktop only by CSS) -->
+    <div id="custom-cursor" class="custom-cursor">
+        <span id="cursor-content" class="text-xl"></span>
+    </div>
+
+    <!-- Header & Navigation -->
+    <header id="site-header" class="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-3 sm:py-4 bg-secondary/90 backdrop-blur-md border-b border-transparent transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="#" class="text-2xl font-display font-bold text-primary hover-target tracking-tight flex items-center gap-2" data-cursor-icon="☕">
+                <span class="inline-block w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">B</span>
+                <span>Bakeat</span>
+            </a>
+
+            <nav class="hidden sm:block">
+                <ul class="flex items-center space-x-8 text-sm md:text-base">
+                    <li><a href="#bakes" class="text-text hover:text-accent transition-colors hover-target" data-cursor-icon="🥐">Bakes</a></li>
+                    <li><a href="#artisans" class="text-text hover:text-accent transition-colors hover-target" data-cursor-icon="👨‍🍳">Artisans</a></li>
+                    <li><a href="#news" class="text-text hover:text-accent transition-colors hover-target" data-cursor-icon="📰">News</a></li>
+                    <li><a href="#contact" class="text-text hover:text-accent transition-colors hover-target" data-cursor-icon="💌">Contact</a></li>
+                </ul>
+            </nav>
+
+            <button
+                class="sm:hidden text-text p-2 rounded-lg hover:bg-primary/10 hover-target"
+                onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                aria-label="Toggle navigation menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     class="lucide lucide-menu">
+                    <line x1="4" x2="20" y1="12" y2="12"/>
+                    <line x1="4" x2="20" y1="6" y2="6"/>
+                    <line x1="4" x2="20" y1="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden sm:hidden mt-3 space-y-2 bg-secondary p-4 rounded-2xl shadow-xl max-w-7xl mx-auto border border-primary/10">
+            <a href="#bakes" class="block text-text hover:text-accent p-2 rounded-lg hover:bg-primary/5"
+               onclick="document.getElementById('mobile-menu').classList.add('hidden')">Bakes</a>
+            <a href="#artisans" class="block text-text hover:text-accent p-2 rounded-lg hover:bg-primary/5"
+               onclick="document.getElementById('mobile-menu').classList.add('hidden')">Artisans</a>
+            <a href="#news" class="block text-text hover:text-accent p-2 rounded-lg hover:bg-primary/5"
+               onclick="document.getElementById('mobile-menu').classList.add('hidden')">News</a>
+            <a href="#contact" class="block text-text hover:text-accent p-2 rounded-lg hover:bg-primary/5"
+               onclick="document.getElementById('mobile-menu').classList.add('hidden')">Contact</a>
+        </div>
+    </header>
+
+    <!-- Main SPA Content Container -->
+    <div id="content-area">
+        <main class="max-w-7xl mx-auto pt-24">
+            <!-- Filled by renderHomePage() or renderDetailPage() -->
+        </main>
+    </div>
+
+    <!-- Footer / Contact -->
+    <footer id="contact-footer" class="bg-primary text-secondary pt-16 pb-8 px-6 mt-16" id="contact">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 border-b border-secondary/20 pb-10 mb-6">
+            <!-- Logo / Social -->
+            <div class="space-y-4 animate-on-scroll" style="transition-delay: 0.1s;">
+                <h3 class="text-3xl font-display font-bold tracking-tight">Bakeat</h3>
+                <p class="text-sm text-secondary/80 max-w-xs">
+                    A cozy bakery bringing slow-fermented loaves and buttery pastries to your neighborhood table.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-secondary hover:text-accent transition-colors hover-target" data-cursor-icon="📘">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-facebook">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-secondary hover:text-accent transition-colors hover-target" data-cursor-icon="📸">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-instagram">
+                            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-secondary hover:text-accent transition-colors hover-target" data-cursor-icon="🐦">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-twitter">
+                            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.5 3.5 6c2.3 2.6 5.6 4.1 9.2 4.1.7-2 2-3.8 4-4.7 1.7-.5 3.4-.6 5-1.2"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Menu -->
+            <div class="space-y-4 animate-on-scroll" style="transition-delay: 0.3s;">
+                <h4 class="text-lg font-semibold text-accent">Menu</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#bakes" class="hover:text-accent transition-colors hover-target">Signature Bakes</a></li>
+                    <li><a href="#artisans" class="hover:text-accent transition-colors hover-target">Our Team</a></li>
+                    <li><a href="#news" class="hover:text-accent transition-colors hover-target">Latest News</a></li>
+                    <li><a href="#contact" class="hover:text-accent transition-colors hover-target">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="space-y-4 animate-on-scroll" style="transition-delay: 0.5s;">
+                <h4 class="text-lg font-semibold text-accent">Contact Info</h4>
+                <p class="text-sm">Bakeat@gmail.com</p>
+                <p class="text-sm">+45 48 88 88 61</p>
+            </div>
+
+            <!-- Address / Time -->
+            <div class="space-y-4 animate-on-scroll" style="transition-delay: 0.7s;">
+                <h4 class="text-lg font-semibold text-accent">Address &amp; Time</h4>
+                <p class="text-sm">
+                    2037 Long Lake Rd, Block B, Unit 8B,<br />Sudbury, ON P3E 6J9
+                </p>
+                <p class="mt-2 text-sm">Tues–Fri: 8:30 a.m. - 4 p.m.</p>
+                <p class="text-sm">Sat: 9 a.m. - 3 p.m. | Sun–Mon: CLOSED</p>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3 text-xs sm:text-sm pt-2">
+            <p class="text-secondary/80">&copy; 2025 Bakeat. All rights reserved.</p>
+            <a href="#" class="hover:text-accent transition-colors hover-target flex items-center gap-1" data-cursor-icon="⬆️">
+                <span>Back to top</span><span>↑</span>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables & state
+        window.cursorMovementHandler = null;
+        let isTicking = false;
+
+        // --- DATA for Signature Bakes ---
+        const BAKE_DATA = {
+            'sourdough': {
+                id: 'sourdough',
+                name: "Green Fern Sourdough",
+                icon: "🍞",
+                image: "https://placehold.co/800x600/81C784/FFFFFF?text=Green+Fern+Sourdough+-+Artisan+Loaf",
+                description: "Our signature loaf. This sourdough is slow-fermented for 48 hours, resulting in a deep, complex flavor profile, a perfectly blistered crust, and an open, airy crumb. It is the heart of our bakery.",
+                details: [
+                    "Flour: Organic Stone-Milled Wheat",
+                    "Fermentation Time: 48 Hours",
+                    "Signature Flavor: Mild Tang, Nutty Finish",
+                    "Best Paired With: Fresh Butter and Sea Salt"
+                ],
+                gallery: [
+                    "https://placehold.co/400x400/8B4513/F5E9D5?text=Sourdough+Crust",
+                    "https://placehold.co/400x400/8B4513/F5E9D5?text=Sourdough+Crumb",
+                    "https://placehold.co/400x400/8B4513/F5E9D5?text=Sourdough+Process"
+                ]
+            },
+            'croissant': {
+                id: 'croissant',
+                name: "Purple Flower Croissant",
+                icon: "🥐",
+                image: "https://placehold.co/800x600/BA68C8/FFFFFF?text=Purple+Flower+Croissant+-+Perfectly+Layered",
+                description: "A testament to lamination mastery. These croissants feature exactly 81 delicate layers of dough and premium European butter, baked until golden brown and irresistibly flaky. Served fresh daily.",
+                details: [
+                    "Butter: 84% European Fat Content",
+                    "Layers: 81 Flaky Layers",
+                    "Signature Flavor: Rich, Buttery, Slightly Sweet",
+                    "Best Paired With: Espresso or Homemade Jam"
+                ],
+                gallery: [
+                    "https://placehold.co/400x400/CD853F/F5E9D5?text=Croissant+Lamination",
+                    "https://placehold.co/400x400/CD853F/F5E9D5?text=Croissant+Baked",
+                    "https://placehold.co/400x400/CD853F/F5E9D5?text=Croissant+Coffee"
+                ]
+            }
+            // Add more bakes here if you want
+        };
+
+        // --- 1. Custom Cursor ---
+        function initCursor() {
+            const cursor = document.getElementById('custom-cursor');
+            const cursorContent = document.getElementById('cursor-content');
+
+            if (!cursor) return;
+
+            const interactiveElements = document.querySelectorAll('.hover-target, a, button, .bake-link');
+
+            // Remove old handler if any
+            if (window.cursorMovementHandler) {
+                document.removeEventListener('mousemove', window.cursorMovementHandler);
+            }
+
+            window.cursorMovementHandler = (e) => {
+                cursor.style.opacity = 1;
+                const isGrow = cursor.classList.contains('cursor-grow');
+                const offset = isGrow ? 40 : 6;
+                cursor.style.transform = `translate3d(${e.clientX - offset}px, ${e.clientY - offset}px, 0)`;
+            };
+
+            document.addEventListener('mousemove', window.cursorMovementHandler);
+
+            // Hover effects
+            interactiveElements.forEach((el) => {
+                // Clear old listeners if they exist
+                if (el.mouseEnterHandler) el.removeEventListener('mouseenter', el.mouseEnterHandler);
+                if (el.mouseLeaveHandler) el.removeEventListener('mouseleave', el.mouseLeaveHandler);
+
+                el.mouseEnterHandler = () => {
+                    cursor.classList.add('cursor-grow');
+                    const icon = el.getAttribute('data-cursor-icon');
+                    cursorContent.textContent = icon || '';
+                };
+
+                el.mouseLeaveHandler = () => {
+                    cursor.classList.remove('cursor-grow');
+                    cursorContent.textContent = '';
+                };
+
+                el.addEventListener('mouseenter', el.mouseEnterHandler);
+                el.addEventListener('mouseleave', el.mouseLeaveHandler);
+            });
+        }
+
+        // --- 2. Scroll Animations, Origin Transition, Parallax, Header Effect ---
+        function initScrollAnimations() {
+            // Intersection Observer for fade/slide and hero text
+            const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+            const heroTextElements = document.querySelectorAll('#hero .hero-text');
+            const scrollElements = document.querySelectorAll('.animate-on-scroll');
+
+            if ('IntersectionObserver' in window) {
+                const heroObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { ...observerOptions, threshold: 0.01 });
+
+                heroTextElements.forEach(el => heroObserver.observe(el));
+
+                const scrollObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+
+                scrollElements.forEach(el => scrollObserver.observe(el));
+            } else {
+                // Fallback: show everything
+                heroTextElements.forEach(el => el.classList.add('visible'));
+                scrollElements.forEach(el => el.classList.add('visible'));
+            }
+
+            // Origin transition elements
+            const originWrapper = document.getElementById('origin-transition-wrapper');
+            const middleImage = document.getElementById('img-3');
+            const otherImages = document.querySelectorAll('#img-1, #img-2, #img-4, #img-5');
+            const originText = document.getElementById('origin-text-overlay');
+
+            // Parallax elements
+            const parallaxElements = document.querySelectorAll('[data-parallax]');
+            const header = document.getElementById('site-header');
+
+            function updateOriginAnimation() {
+                if (!originWrapper || !middleImage) return;
+
+                const rect = originWrapper.getBoundingClientRect();
+                const scrollProgress = 1 - (rect.bottom / (rect.height - window.innerHeight));
+                const normalized = Math.min(1, Math.max(0, scrollProgress));
+
+                // Image zoom 0-50%
+                const zoomProgress = Math.min(1, normalized * 2);
+                const scale = 1 + zoomProgress * 1.5;
+
+                // Text fade 50-100%
+                const textProgress = Math.min(1, Math.max(0, (normalized - 0.5) * 2));
+
+                middleImage.style.transform = `scale(${scale})`;
+
+                otherImages.forEach(img => {
+                    const opacity = 1 - zoomProgress;
+                    img.style.opacity = opacity;
+                    img.style.transform = `scale(${1 - zoomProgress * 0.1})`;
+                });
+
+                if (originText) {
+                    originText.style.opacity = textProgress;
+                }
+            }
+
+            function updateParallax() {
+                if (!parallaxElements.length) return;
+                const scrollY = window.scrollY || window.pageYOffset;
+                parallaxElements.forEach(el => {
+                    const speed = parseFloat(el.dataset.parallaxSpeed) || 0.15;
+                    el.style.transform = `translate3d(0, ${scrollY * speed * -1}px, 0)`;
+                });
+            }
+
+            function updateHeader() {
+                if (!header) return;
+                const y = window.scrollY || window.pageYOffset;
+                if (y > 10) {
+                    header.classList.add(
+                        'bg-secondary/95',
+                        'shadow-lg',
+                        'border-primary/10'
+                    );
+                } else {
+                    header.classList.remove(
+                        'bg-secondary/95',
+                        'shadow-lg',
+                        'border-primary/10'
+                    );
+                }
+            }
+
+            function onScroll() {
+                if (!isTicking) {
+                    window.requestAnimationFrame(() => {
+                        updateOriginAnimation();
+                        updateParallax();
+                        updateHeader();
+                        isTicking = false;
+                    });
+                    isTicking = true;
+                }
+            }
+
+            // Remove previous scroll handler if any
+            if (window._bakeatScrollHandler) {
+                window.removeEventListener('scroll', window._bakeatScrollHandler);
+            }
+            window._bakeatScrollHandler = onScroll;
+            window.addEventListener('scroll', onScroll, { passive: true });
+
+            // Initial pass
+            onScroll();
+        }
+
+        // --- 3. Render Home Page ---
+        function renderHomePage() {
+            const html = `
+                <main class="max-w-7xl mx-auto pt-24 sm:pt-28">
+                    <!-- Hero -->
+                    <section id="hero" class="relative min-h-[80vh] sm:min-h-[90vh] flex flex-col justify-center items-center text-center px-6 sm:px-8 overflow-hidden rounded-3xl sm:rounded-[2.5rem] bg-white/50 shadow-[0_24px_60px_rgba(0,0,0,0.12)]">
+                        <div
+                            class="absolute inset-0 bg-cover bg-center opacity-25 sm:opacity-40"
+                            style="background-image:url('https://placehold.co/1920x1080/8B4513/FFFFFF?text=Bakery+Background');"
+                            data-parallax
+                            data-parallax-speed="0.25"
+                        ></div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/40 to-secondary/90"></div>
+
+                        <div class="relative z-10 max-w-3xl mx-auto space-y-8">
+                            <p class="uppercase tracking-[0.35em] text-xs sm:text-sm text-primary/80 hero-text">ARTISAN BAKERY • SMALL BATCH • SLOW FERMENTED</p>
+                            <h1 class="font-display font-extrabold text-5xl sm:text-7xl md:text-8xl text-primary leading-none hero-text">
+                                Bakeat 'til you make it!
+                            </h1>
+                            <p class="text-base sm:text-xl text-text/80 max-w-2xl mx-auto hero-text" style="transition-delay:0.5s;">
+                                A cozy bakery where passion meets perfection, serving up handcrafted treats
+                                that warm the heart and delight the taste buds.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 hero-text" style="transition-delay:0.9s;">
+                                <button
+                                    class="px-8 py-3 bg-primary text-secondary text-sm sm:text-base font-semibold rounded-full shadow-lg hover:bg-accent hover:-translate-y-0.5 hover:shadow-xl transition-all hover-target"
+                                    data-cursor-icon="🍽️"
+                                    type="button"
+                                    onclick="window.location.hash='#bakes'">
+                                    Explore Our Menu
+                                </button>
+                                <span class="text-xs sm:text-sm text-text/70">
+                                    Freshly baked, every single morning.
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Process -->
+                    <section id="process" class="py-20 sm:py-24 px-4 sm:px-6">
+                        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+                            <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary animate-on-scroll">
+                                Behind the dough
+                            </h2>
+                            <p class="text-sm sm:text-base text-text/70 max-w-md animate-on-scroll" style="transition-delay:0.15s;">
+                                From grain to golden crust, every step is intentional. Here’s how each Bakeat loaf
+                                finds its way to your table.
+                            </p>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-10 lg:gap-12">
+                            <!-- Step 1 -->
+                            <div class="animate-on-scroll space-y-4" style="transition-delay:0.1s;">
+                                <div class="relative overflow-hidden rounded-2xl shadow-xl group" data-parallax data-parallax-speed="0.05">
+                                    <img src="https://placehold.co/400x300/F5E9D5/8B4513?text=Finest+Ingredients" alt="Ingredients" class="img-placeholder transition-transform duration-500 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <span class="text-4xl sm:text-5xl font-display text-accent">01</span>
+                                <h3 class="text-2xl sm:text-3xl font-display font-semibold text-text">Finest Ingredients</h3>
+                                <p class="text-sm sm:text-base text-text/80">
+                                    At Bakeat, every creation starts with the finest ingredients and a passion for perfection.
+                                    Our bakers carefully mix each batch with love, ensuring the perfect balance of flavors and textures.
+                                </p>
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div class="animate-on-scroll space-y-4" style="transition-delay:0.3s;">
+                                <div class="relative overflow-hidden rounded-2xl shadow-xl group" data-parallax data-parallax-speed="0.03">
+                                    <img src="https://placehold.co/400x300/F5E9D5/8B4513?text=Artful+Transformation" alt="Baking in Oven" class="img-placeholder transition-transform duration-500 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <span class="text-4xl sm:text-5xl font-display text-accent">02</span>
+                                <h3 class="text-2xl sm:text-3xl font-display font-semibold text-text">Artful Transformation</h3>
+                                <p class="text-sm sm:text-base text-text/80">
+                                    Our skilled artisans bring each dough to life in our state-of-the-art ovens. With precision in
+                                    temperature and timing, every loaf is transformed into a golden, perfectly baked masterpiece.
+                                </p>
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div class="animate-on-scroll space-y-4" style="transition-delay:0.5s;">
+                                <div class="relative overflow-hidden rounded-2xl shadow-xl group">
+                                    <img src="https://placehold.co/400x300/F5E9D5/8B4513?text=Savor+the+Flavor" alt="Slicing Bread" class="img-placeholder transition-transform duration-500 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <span class="text-4xl sm:text-5xl font-display text-accent">03</span>
+                                <h3 class="text-2xl sm:text-3xl font-display font-semibold text-text">Savor the Flavor</h3>
+                                <p class="text-sm sm:text-base text-text/80">
+                                    The final step celebrates the joy of savoring our craft. Every bite delivers a delightful blend
+                                    of aroma, texture, and taste, inviting you to experience the authentic, heartwarming flavors.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Signature Bakes -->
+                    <section id="bakes" class="py-20 sm:py-24 px-4 sm:px-6 bg-white/70 rounded-3xl sm:rounded-[2.5rem] my-10 shadow-inner">
+                        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+                            <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary animate-on-scroll">
+                                Signature Bakes
+                            </h2>
+                            <p class="text-sm sm:text-base text-text/70 max-w-md animate-on-scroll" style="transition-delay:0.15s;">
+                                Click through our most-loved bakes to see the craft, ingredients, and stories behind each loaf.
+                            </p>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+                            <!-- Sourdough (detail link) -->
+                            <a href="#sourdough" class="space-y-4 animate-on-scroll bake-link hover:scale-[1.02] transition-transform block group" style="transition-delay:0.1s;" data-cursor-icon="🍞">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/81C784/FFFFFF?text=Sourdough" alt="Sourdough Loaf" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Green Fern Sourdough</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Slow-fermented artisan loaf with a perfect tang and crust. (Click for details)
+                                </p>
+                            </a>
+
+                            <!-- Croissant (detail link) -->
+                            <a href="#croissant" class="space-y-4 animate-on-scroll bake-link hover:scale-[1.02] transition-transform block group" style="transition-delay:0.2s;" data-cursor-icon="🥐">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/BA68C8/FFFFFF?text=Croissant" alt="Flaky Croissant" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Purple Flower Croissant</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Layered and flaky, a classic with a deep, buttery flavor. (Click for details)
+                                </p>
+                            </a>
+
+                            <!-- Brioche -->
+                            <div class="space-y-4 animate-on-scroll hover-target bake-item group" style="transition-delay:0.3s;" data-cursor-icon="🟠">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/FFB74D/8B4513?text=Brioche" alt="Brioche Loaf" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Orange Flower Brioche</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Rich, buttery bread scented with orange zest, perfect for French toast.
+                                </p>
+                            </div>
+
+                            <!-- Focaccia -->
+                            <div class="space-y-4 animate-on-scroll hover-target bake-item group" style="transition-delay:0.4s;" data-cursor-icon="🍕">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/FFD54F/8B4513?text=Focaccia" alt="Focaccia Bread" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Yellow Flower Focaccia</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Fluffy, olive-oil soaked bread topped with rosemary and sea salt.
+                                </p>
+                            </div>
+
+                            <!-- Cheesecake -->
+                            <div class="space-y-4 animate-on-scroll hover-target bake-item group" style="transition-delay:0.5s;" data-cursor-icon="🍰">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/EF9A9A/8B4513?text=Cheesecake" alt="Cheesecake Slice" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Lilac Flower Cheesecake</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Creamy, classic New York style, baked to perfection.
+                                </p>
+                            </div>
+
+                            <!-- Muffins -->
+                            <div class="space-y-4 animate-on-scroll hover-target bake-item group" style="transition-delay:0.6s;" data-cursor-icon="🧁">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/90A4AE/FFFFFF?text=Muffins" alt="Assorted Muffins" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Muffins</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Daily selection of blueberry, bran, and chocolate chip.
+                                </p>
+                            </div>
+
+                            <!-- Tarts & Pies -->
+                            <div class="space-y-4 animate-on-scroll hover-target bake-item group" style="transition-delay:0.7s;" data-cursor-icon="🥧">
+                                <div class="overflow-hidden rounded-2xl shadow-xl">
+                                    <img src="https://placehold.co/400x400/FFC107/8B4513?text=Tarts+Pies" alt="Fruit Tart" class="img-placeholder transition-transform duration-500 group-hover:scale-105" />
+                                </div>
+                                <h3 class="text-2xl font-display font-semibold text-text">Tarts &amp; Pies</h3>
+                                <p class="text-xs sm:text-sm text-gray-600">
+                                    Seasonal fruit and savory fillings in a flaky crust.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Artisans -->
+                    <section id="artisans" class="py-20 sm:py-24 px-4 sm:px-6">
+                        <div class="md:flex md:space-x-12 items-start">
+                            <div class="md:w-1/3 animate-on-scroll">
+                                <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary mb-6">
+                                    Our Artisans
+                                </h2>
+                                <p class="text-sm sm:text-base text-text/80">
+                                    At Bakeat, every loaf tells a story. Our bakers rise before dawn, hands dusted in flour,
+                                    crafting each pastry with love and patience. From slow-fermented sourdough to buttery, flaky
+                                    croissants, we believe the best bakes come from tradition, time, and a whole lot of passion.
+                                </p>
+                            </div>
+                            <div class="md:w-2/3 mt-10 md:mt-0 space-y-8">
+                                <blockquote class="text-2xl sm:text-3xl font-display italic text-gray-700 border-l-4 border-accent pl-6 animate-on-scroll" style="transition-delay:0.2s;">
+                                    “True craftsmanship is tasted in every bite.”
+                                </blockquote>
+                                <blockquote class="text-2xl sm:text-3xl font-display italic text-gray-700 border-l-4 border-accent pl-6 animate-on-scroll" style="transition-delay:0.4s;">
+                                    “Baking is our love language, we'd Love to share with you &lt;3”
+                                </blockquote>
+                                <div class="mt-8 animate-on-scroll" style="transition-delay:0.6s;">
+                                <div class="artisans-marquee-shell">
+                                    <div class="artisans-marquee-track text-primary">
+                                        <!-- repeat content twice for seamless loop -->
+                                        <span class="artisans-marquee-item">
+                                            Jasper Thorne 🥧, Elowen Frost 🍰, Silas Wren 🍩, Seraphina Bloom 🍪,
+                                            Orion Vale 🥞, Isolde Rivers 🥐, Felix Hawthorne 🥯, Calista Ember 🥖
+                                        </span>
+                                        <span class="artisans-marquee-item">
+                                            Jasper Thorne 🥧, Elowen Frost 🍰, Silas Wren 🍩, Seraphina Bloom 🍪,
+                                            Orion Vale 🥞, Isolde Rivers 🥐, Felix Hawthorne 🥯, Calista Ember 🥖
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <!-- Origin Scroll Transition -->
+                <div id="origin-transition-wrapper">
+                    <div id="origin-sticky-content">
+                        <div id="origin-text-overlay" class="max-w-xl px-6">
+                            <h2 class="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-primary mb-4">
+                                The Origin
+                            </h2>
+                            <p class="text-base sm:text-xl font-body text-text/80">
+                                It all started with a simple dream in the late 1990s—to share the joy of freshly baked bread
+                                with our community. We honor that tradition every day.
+                            </p>
+                            <a href="#news" class="inline-block mt-6 px-6 py-2 border border-primary text-primary rounded-full hover:bg-primary hover:text-secondary transition-colors hover-target text-sm sm:text-base" data-cursor-icon="📜">
+                                Learn more &rarr;
+                            </a>
+                        </div>
+
+                        <div class="origin-image-gallery">
+                            <div class="origin-image-container" id="img-1">
+                                <img src="https://placehold.co/400x500/A0522D/F5E9D5?text=Dough" alt="Dough being prepared">
+                            </div>
+                            <div class="origin-image-container" id="img-2">
+                                <img src="https://placehold.co/400x500/CD853F/F5E9D5?text=Oven" alt="Oven">
+                            </div>
+                            <div class="origin-image-container" id="img-3">
+                                <img src="https://placehold.co/400x500/D2B48C/8B4513?text=Bread+Loaf" alt="Bread loaf">
+                            </div>
+                            <div class="origin-image-container" id="img-4">
+                                <img src="https://placehold.co/400x500/B8860B/F5E9D5?text=Pastries" alt="Pastries">
+                            </div>
+                            <div class="origin-image-container" id="img-5">
+                                <img src="https://placehold.co/400x500/8B4513/F5E9D5?text=Kitchen" alt="Kitchen">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News Section -->
+                <section id="news" class="py-20 sm:py-24 px-4 sm:px-6 bg-primary/10 rounded-3xl sm:rounded-[2.5rem] my-10 shadow-xl max-w-7xl mx-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 animate-on-scroll">
+                        <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary">
+                            News &amp; Updates
+                        </h2>
+                        <a href="#" class="text-primary hover:text-accent transition-colors font-semibold text-sm sm:text-base hover-target" data-cursor-icon="📚">
+                            View All &rarr;
+                        </a>
+                    </div>
+
+                    <div class="space-y-6 sm:space-y-8">
+                        <article class="p-5 sm:p-6 bg-white rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-3 animate-on-scroll" style="transition-delay:0.1s;">
+                            <div class="md:w-3/4">
+                                <h3 class="text-lg sm:text-xl font-display font-semibold text-text">
+                                    Bakeat's Recipe for Nourishing a Better World
+                                </h3>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">
+                                    Sustainability and community outreach program launched.
+                                </p>
+                            </div>
+                            <span class="text-xs sm:text-sm text-gray-400 mt-1 md:mt-0">Oct 28, 2025</span>
+                        </article>
+
+                        <article class="p-5 sm:p-6 bg-white rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-3 animate-on-scroll" style="transition-delay:0.3s;">
+                            <div class="md:w-3/4">
+                                <h3 class="text-lg sm:text-xl font-display font-semibold text-text">
+                                    Introducing Bakeat's New Seasonal Bakes – Limited Time Only!
+                                </h3>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">
+                                    Pumpkin spice and cranberry orange treats are here.
+                                </p>
+                            </div>
+                            <span class="text-xs sm:text-sm text-gray-400 mt-1 md:mt-0">Sep 15, 2025</span>
+                        </article>
+
+                        <article class="p-5 sm:p-6 bg-white rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-3 animate-on-scroll" style="transition-delay:0.5s;">
+                            <div class="md:w-3/4">
+                                <h3 class="text-lg sm:text-xl font-display font-semibold text-text">
+                                    Why Your Cookies Don't Turn Out Right (Tips from our Head Baker)
+                                </h3>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">
+                                    The secret to a perfect chew vs. crunch.
+                                </p>
+                            </div>
+                            <span class="text-xs sm:text-sm text-gray-400 mt-1 md:mt-0">Aug 22, 2025</span>
+                        </article>
+                    </div>
+                </section>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+        }
+
+        // --- 4. Render Detail Page ---
+        function renderDetailPage(bakeId) {
+            const bake = BAKE_DATA[bakeId];
+            if (!bake) {
+                renderHomePage();
+                return;
+            }
+
+            const detailsList = bake.details
+                .map(d => `<li class="flex items-start space-x-2 text-sm sm:text-lg"><span class="text-accent text-xl font-bold leading-none">•</span><span>${d}</span></li>`)
+                .join('');
+
+            const galleryHtml = bake.gallery
+                .map(imgSrc => `
+                    <div class="aspect-square overflow-hidden rounded-xl shadow-xl animate-on-scroll">
+                        <img src="${imgSrc}" alt="${bake.name} detail" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                    </div>
+                `)
+                .join('');
+
+            const html = `
+                <main class="max-w-7xl mx-auto pt-32 px-4 sm:px-8 page-detail-enter">
+                    <a href="#" class="text-primary hover:text-accent font-semibold flex items-center mb-10 hover-target text-sm sm:text-base" data-cursor-icon="🔙">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-arrow-left mr-2">
+                            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+                        </svg>
+                        Back to Signature Bakes
+                    </a>
+
+                    <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+                        <!-- Left: Main Info -->
+                        <div class="space-y-6 animate-on-scroll">
+                            <h1 class="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold text-primary">
+                                ${bake.name} ${bake.icon}
+                            </h1>
+                            <img src="${bake.image}" alt="${bake.name}" class="w-full rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.18)]" />
+                            <p class="text-base sm:text-xl text-text/80 leading-relaxed">
+                                ${bake.description}
+                            </p>
+
+                            <div class="pt-4 space-y-3">
+                                <h3 class="text-2xl sm:text-3xl font-display font-bold text-primary">Baking Facts</h3>
+                                <ul class="space-y-2 font-body">
+                                    ${detailsList}
+                                </ul>
+                            </div>
+
+                            <a href="#" class="inline-block mt-4 sm:mt-6 px-8 py-3 bg-accent text-primary text-sm sm:text-lg font-semibold rounded-full shadow-lg hover:bg-primary hover:text-secondary transition-all hover-target" data-cursor-icon="🛒">
+                                Order Now
+                            </a>
+                        </div>
+
+                        <!-- Right: Gallery & Commitment -->
+                        <div class="space-y-8 animate-on-scroll" style="transition-delay:0.2s;">
+                            <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary">
+                                The Craft Behind The Bake
+                            </h2>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                ${galleryHtml}
+                            </div>
+
+                            <div class="bg-primary/5 p-6 sm:p-7 rounded-2xl shadow-inner space-y-3">
+                                <h3 class="text-xl sm:text-2xl font-display font-semibold text-text">Our Commitment</h3>
+                                <p class="text-sm sm:text-lg text-text/80">
+                                    Every ${bake.name} is a promise—a commitment to traditional methods, local sourcing,
+                                    and uncompromising quality. We believe that slow food is the best food.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+
+            // Animate detail container in (Framer-like)
+            const page = document.querySelector('.page-detail-enter');
+            requestAnimationFrame(() => {
+                page.classList.add('page-detail-enter-active');
+            });
+        }
+
+        // --- 5. Routing / Initialization ---
+        function handleRouting() {
+            const hash = window.location.hash.slice(1);
+            const bakeId = hash.split('?')[0];
+
+            if (Object.keys(BAKE_DATA).includes(bakeId)) {
+                renderDetailPage(bakeId);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            } else {
+                renderHomePage();
+                if (bakeId) {
+                    const target = document.getElementById(bakeId);
+                    if (target) {
+                        target.scrollIntoView();
+                    }
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }
+            }
+
+            // After content changes, re-init interactions
+            initCursor();
+            initScrollAnimations();
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        window.addEventListener('hashchange', handleRouting);
+        window.addEventListener('load', handleRouting);
+    </script>
+</body>
+</html>
